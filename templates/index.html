@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Analyse Questionnaire</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>📊 Analyse du questionnaire</h1>
+
+        <p>
+            Importez votre fichier Excel ou CSV
+            et créez vos graphiques.
+        </p>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- IMPORT -->
+    <!-- ========================= -->
+
+    <div class="card">
+
+        <h2>📁 Importer un fichier</h2>
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+            <div class="file-area">
+
+                <input
+                    type="file"
+                    name="file"
+                    accept=".xlsx,.csv"
+                    required
+                >
+
+            </div>
+
+            <button type="submit"
+                    class="btn">
+
+                Importer le fichier
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- ERREUR -->
+    <!-- ========================= -->
+
+    {% if error %}
+
+        <div class="error">
+
+            {{ error }}
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- ========================= -->
+    <!-- ANALYSE -->
+    <!-- ========================= -->
+
+    {% if columns %}
+
+    <div class="card">
+
+        <h2>⚙️ Paramètres du graphique</h2>
+
+        <form method="POST">
+
+            <input
+                type="hidden"
+                name="filename"
+                value="{{ filename }}"
+            >
+
+            <div class="form-grid">
+
+                <!-- X -->
+
+                <div class="form-group">
+
+                    <label>
+                        Variable X
+                    </label>
+
+                    <select name="x_column"
+                            required>
+
+                        <option value="">
+                            -- Choisir X --
+                        </option>
+
+                        {% for column in columns %}
+
+                        <option value="{{ column }}">
+
+                            {{ column }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- Y -->
+
+                <div class="form-group">
+
+                    <label>
+                        Variable Y
+                    </label>
+
+                    <select name="y_column"
+                            required>
+
+                        <option value="">
+                            -- Choisir Y --
+                        </option>
+
+                        {% for column in columns %}
+
+                        <option value="{{ column }}">
+
+                            {{ column }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- TYPE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Type de graphique
+                    </label>
+
+                    <select name="chart_type">
+
+                        <option value="bar">
+                            📊 Barres
+                        </option>
+
+                        <option value="pie">
+                            🥧 Circulaire
+                        </option>
+
+                        <option value="line">
+                            📈 Courbe
+                        </option>
+
+                        <option value="scatter">
+                            🔵 Nuage de points
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                name="generate"
+                class="btn generate">
+
+                Générer le graphique
+
+            </button>
+
+        </form>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ========================= -->
+    <!-- STATISTIQUES -->
+    <!-- ========================= -->
+
+    {% if stats %}
+
+    <div class="stats">
+
+        <div class="stat-card">
+
+            <span>👥</span>
+
+            <strong>
+                {{ stats.total }}
+            </strong>
+
+            <small>
+                Total réponses
+            </small>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>✅</span>
+
+            <strong>
+                {{ stats.valid }}
+            </strong>
+
+            <small>
+                Réponses valides
+            </small>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>⚠️</span>
+
+            <strong>
+                {{ stats.missing_x }}
+            </strong>
+
+            <small>
+                Valeurs X manquantes
+            </small>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>⚠️</span>
+
+            <strong>
+                {{ stats.missing_y }}
+            </strong>
+
+            <small>
+                Valeurs Y manquantes
+            </small>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ========================= -->
+    <!-- GRAPHIQUE -->
+    <!-- ========================= -->
+
+    {% if chart %}
+
+    <div class="card chart-card">
+
+        <h2>📈 Résultat</h2>
+
+        {{ chart | safe }}
+
+    </div>
+
+    {% endif %}
+{% if stats %}
+
+<div class="card statistics">
+
+    <h2>📈 Statistiques</h2>
+
+   
+
+
+    <h3>📋 Répartition</h3>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Effectif</th>
+                    <th>Pourcentage</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for row in stats.frequency %}
+
+                <tr>
+
+                    <td>
+                        {{ row[columns[0]] if false else row[request.form.get('x_column')] }}
+                    </td>
+
+                    <td>
+                        {{ row["Effectif"] }}
+                    </td>
+
+                    <td>
+                        {{ row["Pourcentage"] }} %
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+</div>
+
+</body>
+
+</html>
