@@ -7,7 +7,9 @@ from io import BytesIO
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
+# Vercel allows temporary files in /tmp
+UPLOAD_FOLDER = "/tmp/uploads"
+
 ALLOWED_EXTENSIONS = {"xlsx", "csv"}
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
