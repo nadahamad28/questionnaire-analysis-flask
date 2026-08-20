@@ -1,101 +1,12 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 import os
-from flask import send_file
 from io import BytesIO
+
 app = Flask(__name__)
-@app.route("/export-excel", methods=["POST"])
-def export_excel():
 
-    filename = request.form.get("filename")
-    x_column = request.form.get("x_column")
-    y_column = request.form.get("y_column")
-
-    filepath = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        filename
-    )
-
-    df = read_file(filepath)
-
-    df.columns = [
-        str(col).strip()
-        for col in df.columns
-    ]
-
-    # Données valides
-    valid = df[[x_column, y_column]].dropna()
-
-    # Analyse
-    analyse = (
-        valid
-        .groupby([x_column, y_column])
-        .size()
-        .reset_index(name="Effectif")
-    )
-
-    # Pourcentage
-    total = analyse["Effectif"].sum()
-
-    analyse["Pourcentage"] = (
-        analyse["Effectif"] / total * 100
-    ).round(2)
-
-    # Statistiques
-    statistiques = pd.DataFrame({
-        "Indicateur": [
-            "Total réponses",
-            "Réponses valides",
-            "Réponses manquantes X",
-            "Réponses manquantes Y"
-        ],
-        "Valeur": [
-            len(df),
-            len(valid),
-            int(df[x_column].isna().sum()),
-            int(df[y_column].isna().sum())
-        ]
-    })
-
-    # Création du fichier Excel en mémoire
-    output = BytesIO()
-
-    with pd.ExcelWriter(
-        output,
-        engine="openpyxl"
-    ) as writer:
-
-        analyse.to_excel(
-            writer,
-            sheet_name="Analyse",
-            index=False
-        )
-
-        statistiques.to_excel(
-            writer,
-            sheet_name="Statistiques",
-            index=False
-        )
-
-        df.to_excel(
-            writer,
-            sheet_name="Donnees",
-            index=False
-        )
-
-    output.seek(0)
-
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name="analyse_resultat.xlsx",
-        mimetype=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        )
-    )
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"xlsx", "csv"}
 
@@ -104,6 +15,10 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
+# =========================================================
+# VERIFICATION EXTENSION
+# =========================================================
+
 def allowed_file(filename):
     return (
         "." in filename
@@ -111,7 +26,12 @@ def allowed_file(filename):
     )
 
 
+# =========================================================
+# LECTURE FICHIER
+# =========================================================
+
 def read_file(filepath):
+
     extension = filepath.rsplit(".", 1)[1].lower()
 
     if extension == "csv":
@@ -120,19 +40,30 @@ def read_file(filepath):
     return pd.read_excel(filepath)
 
 
+# =========================================================
+# PAGE PRINCIPALE
+# =========================================================
+
 @app.route("/", methods=["GET", "POST"])
 def index():
 
     columns = []
-    chart = None
-    stats = None
+    charts = []
+    stats = []
+    sexe_stats = []
+
     error = None
+    filename = ""
+
+    # =====================================================
+    # POST
+    # =====================================================
 
     if request.method == "POST":
 
-        # =========================
+        # =================================================
         # IMPORT DU FICHIER
-        # =========================
+        # =================================================
 
         if "file" in request.files:
 
@@ -146,14 +77,17 @@ def index():
 
             else:
 
+                filename = file.filename
+
                 filepath = os.path.join(
                     app.config["UPLOAD_FOLDER"],
-                    file.filename
+                    filename
                 )
 
                 file.save(filepath)
 
                 try:
+
                     df = read_file(filepath)
 
                     # Nettoyage des noms de colonnes
@@ -164,213 +98,718 @@ def index():
 
                     columns = df.columns.tolist()
 
-                    # Sauvegarde temporaire du nom du fichier
-                    return render_template(
-                        "index.html",
-                        columns=columns,
-                        filename=file.filename,
-                        error=None
-                    )
+                    # =====================================
+                    # STATISTIQUES SEXE
+                    # =====================================
 
-                except Exception as e:
-                    error = f"Erreur lors de la lecture : {str(e)}"
+                    if "Sexe" in df.columns:
 
-        # =========================
-        # GENERATION DU GRAPHIQUE
-        # =========================
-
-        elif "generate" in request.form:
-
-            filename = request.form.get("filename")
-            x_column = request.form.get("x_column")
-            y_column = request.form.get("y_column")
-            chart_type = request.form.get("chart_type")
-
-            filepath = os.path.join(
-                app.config["UPLOAD_FOLDER"],
-                filename
-            )
-
-            try:
-
-                df = read_file(filepath)
-
-                df.columns = [
-                    str(col).strip()
-                    for col in df.columns
-                ]
-
-                columns = df.columns.tolist()
-
-                if x_column not in df.columns:
-                    raise ValueError("Variable X invalide.")
-
-                if y_column not in df.columns:
-                    raise ValueError("Variable Y invalide.")
-
-               # =========================
-                # STATISTIQUES
-                # =========================
-
-                total = len(df)
-
-                valid = df[[x_column, y_column]].dropna()
-
-                missing_x = df[x_column].isna().sum()
-                missing_y = df[y_column].isna().sum()
-
-                # Tableau de fréquences
-                frequency = (
-                    valid[x_column]
-                    .value_counts()
-                    .reset_index()
-                )
-
-                frequency.columns = [
-                    x_column,
-                    "Effectif"
-                ]
-
-                frequency["Pourcentage"] = (
-                    frequency["Effectif"] / len(valid) * 100
-                ).round(2)
-
-                stats = {
-                     "total": total,
-                    "valid": len(valid),
-                    "missing_x": int(missing_x),
-                    "missing_y": int(missing_y),
-                    "x_name": x_column,
-                    "y_name": y_column,
-                    "frequency": frequency.to_dict("records")
-                }
-                # =========================
-                # PREPARATION DES DONNEES
-                # =========================
-
-                if chart_type in ["bar", "pie"]:
-
-                    data = (
-                        valid
-                        .groupby([x_column, y_column])
-                        .size()
-                        .reset_index(name="Nombre")
-                    )
-
-                    if chart_type == "bar":
-
-                        fig = px.bar(
-                            data,
-                            x=x_column,
-                            y="Nombre",
-                            color=y_column,
-                            barmode="group",
-                            title=f"{y_column} selon {x_column}"
-                        )
-
-                    else:
-
-                        # Pour le graphique circulaire,
-                        # on utilise la variable Y
-                        pie_data = (
-                            valid[y_column]
+                        sexe_frequency = (
+                            df["Sexe"]
+                            .dropna()
                             .value_counts()
                             .reset_index()
                         )
 
-                        pie_data.columns = [
-                            y_column,
-                            "Nombre"
+                        sexe_frequency.columns = [
+                            "Sexe",
+                            "Effectif"
                         ]
 
-                        fig = px.pie(
-                            pie_data,
-                            names=y_column,
-                            values="Nombre",
-                            title=f"Répartition de {y_column}"
+                        total_sexe = sexe_frequency["Effectif"].sum()
+
+                        if total_sexe > 0:
+
+                            sexe_frequency["Pourcentage"] = (
+                                sexe_frequency["Effectif"]
+                                / total_sexe
+                                * 100
+                            ).round(2)
+
+                        else:
+
+                            sexe_frequency["Pourcentage"] = 0
+
+                        sexe_stats = sexe_frequency.to_dict(
+                            "records"
                         )
 
-                elif chart_type == "line":
-
-                    data = (
-                        valid
-                        .groupby(x_column)
-                        .size()
-                        .reset_index(name="Nombre")
+                    return render_template(
+                        "index.html",
+                        columns=columns,
+                        charts=[],
+                        stats=[],
+                        sexe_stats=sexe_stats,
+                        filename=filename,
+                        error=None
                     )
 
-                    fig = px.line(
-                        data,
-                        x=x_column,
-                        y="Nombre",
-                        markers=True,
-                        title=f"Évolution de {y_column}"
-                    )
+                except Exception as e:
 
-                elif chart_type == "scatter":
+                    error = f"Erreur lors de la lecture : {str(e)}"
 
-                    numeric_data = valid.copy()
+        # =================================================
+        # GENERATION DES GRAPHIQUES
+        # =================================================
 
-                    numeric_data[x_column] = pd.to_numeric(
-                        numeric_data[x_column],
-                        errors="coerce"
-                    )
+        elif "generate" in request.form:
 
-                    numeric_data[y_column] = pd.to_numeric(
-                        numeric_data[y_column],
-                        errors="coerce"
-                    )
+            filename = request.form.get(
+                "filename",
+                ""
+            )
 
-                    numeric_data = numeric_data.dropna()
+            # Plusieurs X et plusieurs Y
+            x_columns = request.form.getlist(
+                "x_column"
+            )
 
-                    fig = px.scatter(
-                        numeric_data,
-                        x=x_column,
-                        y=y_column,
-                        title=f"{y_column} selon {x_column}"
-                    )
+            y_columns = request.form.getlist(
+                "y_column"
+            )
 
-                else:
-                    raise ValueError(
-                        "Type de graphique non reconnu."
-                    )
+            chart_type = request.form.get(
+                "chart_type",
+                "bar"
+            )
 
-                # =========================
-                # STYLE DU GRAPHIQUE
-                # =========================
+            if not x_columns:
 
-                fig.update_layout(
-                    template="plotly_white",
-                    height=550,
-                    margin=dict(
-                        l=40,
-                        r=40,
-                        t=80,
-                        b=40
-                    )
+                error = (
+                    "Veuillez sélectionner au moins "
+                    "une variable X."
                 )
 
-                chart = pio.to_html(
-                    fig,
-                    full_html=False,
-                    include_plotlyjs="cdn"
+            elif not y_columns:
+
+                error = (
+                    "Veuillez sélectionner au moins "
+                    "une variable Y."
                 )
 
-            except Exception as e:
+            else:
 
-                error = f"Erreur : {str(e)}"
+                filepath = os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    filename
+                )
+
+                try:
+
+                    df = read_file(filepath)
+
+                    df.columns = [
+                        str(col).strip()
+                        for col in df.columns
+                    ]
+
+                    columns = df.columns.tolist()
+
+                    # =====================================
+                    # VERIFICATION DES COLONNES
+                    # =====================================
+
+                    invalid_x = [
+                        col
+                        for col in x_columns
+                        if col not in df.columns
+                    ]
+
+                    invalid_y = [
+                        col
+                        for col in y_columns
+                        if col not in df.columns
+                    ]
+
+                    if invalid_x:
+
+                        raise ValueError(
+                            "Variable(s) X invalide(s) : "
+                            + ", ".join(invalid_x)
+                        )
+
+                    if invalid_y:
+
+                        raise ValueError(
+                            "Variable(s) Y invalide(s) : "
+                            + ", ".join(invalid_y)
+                        )
+
+                    # =====================================
+                    # STATISTIQUES SEXE
+                    # =====================================
+
+                    if "Sexe" in df.columns:
+
+                        sexe_frequency = (
+                            df["Sexe"]
+                            .dropna()
+                            .value_counts()
+                            .reset_index()
+                        )
+
+                        sexe_frequency.columns = [
+                            "Sexe",
+                            "Effectif"
+                        ]
+
+                        total_sexe = (
+                            sexe_frequency["Effectif"].sum()
+                        )
+
+                        if total_sexe > 0:
+
+                            sexe_frequency["Pourcentage"] = (
+                                sexe_frequency["Effectif"]
+                                / total_sexe
+                                * 100
+                            ).round(2)
+
+                        else:
+
+                            sexe_frequency["Pourcentage"] = 0
+
+                        sexe_stats = (
+                            sexe_frequency.to_dict("records")
+                        )
+
+                    # =====================================
+                    # X × Y
+                    # =====================================
+
+                    for x_column in x_columns:
+
+                        for y_column in y_columns:
+
+                            valid = (
+                                df[
+                                    [x_column, y_column]
+                                ]
+                                .dropna()
+                            )
+
+                            if valid.empty:
+                                continue
+
+                            # =================================
+                            # STATISTIQUES
+                            # =================================
+
+                            total = len(df)
+
+                            valid_count = len(valid)
+
+                            missing_x = int(
+                                df[x_column].isna().sum()
+                            )
+
+                            missing_y = int(
+                                df[y_column].isna().sum()
+                            )
+
+                            stats.append({
+                                "x_name": x_column,
+                                "y_name": y_column,
+                                "total": total,
+                                "valid": valid_count,
+                                "missing_x": missing_x,
+                                "missing_y": missing_y
+                            })
+
+                            # =================================
+                            # GRAPHIQUE BAR
+                            # =================================
+
+                            if chart_type == "bar":
+
+                                data = (
+                                    valid
+                                    .groupby(
+                                        [x_column, y_column]
+                                    )
+                                    .size()
+                                    .reset_index(
+                                        name="Nombre"
+                                    )
+                                )
+
+                                fig = px.bar(
+                                    data,
+                                    x=x_column,
+                                    y="Nombre",
+                                    color=y_column,
+                                    barmode="group",
+                                    title=(
+                                        f"{y_column} "
+                                        f"selon {x_column}"
+                                    )
+                                )
+
+                            # =================================
+                            # GRAPHIQUE PIE
+                            # =================================
+
+                            elif chart_type == "pie":
+
+                                pie_data = (
+                                    valid[y_column]
+                                    .value_counts()
+                                    .reset_index()
+                                )
+
+                                pie_data.columns = [
+                                    y_column,
+                                    "Nombre"
+                                ]
+
+                                fig = px.pie(
+                                    pie_data,
+                                    names=y_column,
+                                    values="Nombre",
+                                    title=(
+                                        f"Répartition de "
+                                        f"{y_column}"
+                                    )
+                                )
+
+                            # =================================
+                            # GRAPHIQUE LINE
+                            # =================================
+
+                            elif chart_type == "line":
+
+                                data = (
+                                    valid
+                                    .groupby(x_column)
+                                    .size()
+                                    .reset_index(
+                                        name="Nombre"
+                                    )
+                                )
+
+                                fig = px.line(
+                                    data,
+                                    x=x_column,
+                                    y="Nombre",
+                                    markers=True,
+                                    title=(
+                                        f"Évolution de "
+                                        f"{x_column}"
+                                    )
+                                )
+
+                            # =================================
+                            # GRAPHIQUE SCATTER
+                            # =================================
+
+                            elif chart_type == "scatter":
+
+                                numeric_data = valid.copy()
+
+                                numeric_data[x_column] = (
+                                    pd.to_numeric(
+                                        numeric_data[x_column],
+                                        errors="coerce"
+                                    )
+                                )
+
+                                numeric_data[y_column] = (
+                                    pd.to_numeric(
+                                        numeric_data[y_column],
+                                        errors="coerce"
+                                    )
+                                )
+
+                                numeric_data = (
+                                    numeric_data.dropna()
+                                )
+
+                                if numeric_data.empty:
+                                    continue
+
+                                fig = px.scatter(
+                                    numeric_data,
+                                    x=x_column,
+                                    y=y_column,
+                                    title=(
+                                        f"{y_column} "
+                                        f"selon {x_column}"
+                                    )
+                                )
+
+                            else:
+
+                                raise ValueError(
+                                    "Type de graphique "
+                                    "non reconnu."
+                                )
+
+                            # =================================
+                            # STYLE
+                            # =================================
+
+                            fig.update_layout(
+                                template="plotly_white",
+                                height=500,
+                                margin=dict(
+                                    l=40,
+                                    r=40,
+                                    t=80,
+                                    b=40
+                                )
+                            )
+
+                            # =================================
+                            # CONVERSION HTML
+                            # =================================
+
+                            charts.append({
+                                "x_name": x_column,
+                                "y_name": y_column,
+                                "html": pio.to_html(
+                                    fig,
+                                    full_html=False,
+                                    include_plotlyjs="cdn"
+                                )
+                            })
+
+                except Exception as e:
+
+                    error = f"Erreur : {str(e)}"
+
+    # =====================================================
+    # AFFICHAGE
+    # =====================================================
 
     return render_template(
         "index.html",
         columns=columns,
-        chart=chart,
+        charts=charts,
         stats=stats,
+        sexe_stats=sexe_stats,
         error=error,
-        filename=request.form.get("filename", "")
+        filename=filename
     )
 
 
+# =========================================================
+# EXPORT EXCEL
+# =========================================================
+
+@app.route("/export-excel", methods=["POST"])
+def export_excel():
+
+    filename = request.form.get(
+        "filename",
+        ""
+    )
+
+    # Plusieurs X et Y
+    x_columns = request.form.getlist(
+        "x_column"
+    )
+
+    y_columns = request.form.getlist(
+        "y_column"
+    )
+
+    if not x_columns or not y_columns:
+
+        return (
+            "Veuillez sélectionner au moins "
+            "un X et un Y.",
+            400
+        )
+
+    filepath = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        filename
+    )
+
+    # Vérifier que le fichier existe
+    if not os.path.exists(filepath):
+
+        return (
+            "Fichier introuvable.",
+            404
+        )
+
+    try:
+
+        # ==============================================
+        # LECTURE
+        # ==============================================
+
+        df = read_file(filepath)
+
+        df.columns = [
+            str(col).strip()
+            for col in df.columns
+        ]
+
+        # ==============================================
+        # VERIFICATION COLONNES
+        # ==============================================
+
+        invalid_x = [
+            col
+            for col in x_columns
+            if col not in df.columns
+        ]
+
+        invalid_y = [
+            col
+            for col in y_columns
+            if col not in df.columns
+        ]
+
+        if invalid_x:
+
+            return (
+                "Variable(s) X invalide(s) : "
+                + ", ".join(invalid_x),
+                400
+            )
+
+        if invalid_y:
+
+            return (
+                "Variable(s) Y invalide(s) : "
+                + ", ".join(invalid_y),
+                400
+            )
+
+        # ==============================================
+        # CREATION EXCEL EN MEMOIRE
+        # ==============================================
+
+        output = BytesIO()
+
+        with pd.ExcelWriter(
+            output,
+            engine="openpyxl"
+        ) as writer:
+
+            # ==========================================
+            # STATISTIQUES SEXE
+            # ==========================================
+
+            if "Sexe" in df.columns:
+
+                sexe_frequency = (
+                    df["Sexe"]
+                    .dropna()
+                    .value_counts()
+                    .reset_index()
+                )
+
+                sexe_frequency.columns = [
+                    "Sexe",
+                    "Effectif"
+                ]
+
+                total_sexe = (
+                    sexe_frequency["Effectif"].sum()
+                )
+
+                if total_sexe > 0:
+
+                    sexe_frequency["Pourcentage"] = (
+                        sexe_frequency["Effectif"]
+                        / total_sexe
+                        * 100
+                    ).round(2)
+
+                else:
+
+                    sexe_frequency["Pourcentage"] = 0
+
+                sexe_frequency.to_excel(
+                    writer,
+                    sheet_name="Statistiques Sexe",
+                    index=False
+                )
+
+            # ==========================================
+            # UNE FEUILLE PAR COMBINAISON X / Y
+            # ==========================================
+
+            used_sheet_names = set()
+
+            for x_column in x_columns:
+
+                for y_column in y_columns:
+
+                    valid = (
+                        df[
+                            [x_column, y_column]
+                        ]
+                        .dropna()
+                    )
+
+                    analyse = (
+                        valid
+                        .groupby(
+                            [x_column, y_column]
+                        )
+                        .size()
+                        .reset_index(
+                            name="Effectif"
+                        )
+                    )
+
+                    total = analyse["Effectif"].sum()
+
+                    if total > 0:
+
+                        analyse["Pourcentage"] = (
+                            analyse["Effectif"]
+                            / total
+                            * 100
+                        ).round(2)
+
+                    else:
+
+                        analyse["Pourcentage"] = 0
+
+                    # ==================================
+                    # NOM FEUILLE
+                    # ==================================
+
+                    sheet_name = (
+                        f"{x_column[:12]}_{y_column[:12]}"
+                    )
+
+                    sheet_name = sheet_name[:31]
+
+                    # Excel interdit certains caractères
+                    invalid_chars = [
+                        "\\",
+                        "/",
+                        "*",
+                        "?",
+                        ":",
+                        "[",
+                        "]"
+                    ]
+
+                    for char in invalid_chars:
+                        sheet_name = sheet_name.replace(
+                            char,
+                            "_"
+                        )
+
+                    # Eviter les doublons
+                    original_name = sheet_name
+                    counter = 1
+
+                    while sheet_name in used_sheet_names:
+
+                        suffix = f"_{counter}"
+
+                        sheet_name = (
+                            original_name[
+                                :31 - len(suffix)
+                            ]
+                            + suffix
+                        )
+
+                        counter += 1
+
+                    used_sheet_names.add(
+                        sheet_name
+                    )
+
+                    analyse.to_excel(
+                        writer,
+                        sheet_name=sheet_name,
+                        index=False
+                    )
+
+            # ==========================================
+            # STATISTIQUES GLOBALES
+            # ==========================================
+
+            statistics_rows = []
+
+            for x_column in x_columns:
+
+                for y_column in y_columns:
+
+                    valid = (
+                        df[
+                            [x_column, y_column]
+                        ]
+                        .dropna()
+                    )
+
+                    statistics_rows.append({
+                        "X": x_column,
+                        "Y": y_column,
+                        "Total réponses": len(df),
+                        "Réponses valides": len(valid),
+                        "Réponses manquantes X":
+                            int(
+                                df[x_column]
+                                .isna()
+                                .sum()
+                            ),
+                        "Réponses manquantes Y":
+                            int(
+                                df[y_column]
+                                .isna()
+                                .sum()
+                            )
+                    })
+
+            pd.DataFrame(
+                statistics_rows
+            ).to_excel(
+                writer,
+                sheet_name="Statistiques",
+                index=False
+            )
+
+            # ==========================================
+            # DONNEES ORIGINALES
+            # ==========================================
+
+            df.to_excel(
+                writer,
+                sheet_name="Donnees",
+                index=False
+            )
+
+        # ==============================================
+        # PREPARER LE FICHIER
+        # ==============================================
+
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="analyse_resultat.xlsx",
+            mimetype=(
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            )
+        )
+
+    except Exception as e:
+
+        return (
+            f"Erreur lors de l'export : {str(e)}",
+            500
+        )
+
+
+# =========================================================
+# LANCEMENT
+# =========================================================
+
 if __name__ == "__main__":
+
     app.run(
         debug=True,
         host="127.0.0.1",

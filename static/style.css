@@ -1,3 +1,7 @@
+/* =========================================
+   RESET
+========================================= */
+
 * {
     box-sizing: border-box;
 }
@@ -15,6 +19,11 @@ body {
     margin: 40px auto;
 }
 
+
+/* =========================================
+   HEADER
+========================================= */
+
 .header {
     text-align: center;
     margin-bottom: 30px;
@@ -29,6 +38,11 @@ body {
     color: #666;
 }
 
+
+/* =========================================
+   CARD GENERAL
+========================================= */
+
 .card {
     background: white;
     padding: 25px;
@@ -42,6 +56,11 @@ body {
     margin-bottom: 20px;
 }
 
+
+/* =========================================
+   FILE AREA
+========================================= */
+
 .file-area {
     border: 2px dashed #bbb;
     padding: 30px;
@@ -53,6 +72,11 @@ body {
 input[type="file"] {
     width: 100%;
 }
+
+
+/* =========================================
+   BUTTON
+========================================= */
 
 .btn {
     border: none;
@@ -72,6 +96,11 @@ input[type="file"] {
     margin-top: 20px;
     width: 100%;
 }
+
+
+/* =========================================
+   FORM
+========================================= */
 
 .form-grid {
     display: grid;
@@ -97,6 +126,11 @@ select {
     font-size: 14px;
 }
 
+
+/* =========================================
+   ERROR
+========================================= */
+
 .error {
     background: #fee2e2;
     color: #991b1b;
@@ -104,6 +138,11 @@ select {
     border-radius: 8px;
     margin-bottom: 20px;
 }
+
+
+/* =========================================
+   STATISTICS CARDS
+========================================= */
 
 .stats {
     display: grid;
@@ -139,15 +178,11 @@ select {
     overflow: hidden;
 }
 
-@media (max-width: 800px) {
 
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
+/* =========================================
+   STATISTICS
+========================================= */
 
-    .stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
 .statistics {
     margin-top: 25px;
 }
@@ -159,6 +194,11 @@ select {
 .statistics h3 {
     margin-top: 30px;
 }
+
+
+/* =========================================
+   TABLE
+========================================= */
 
 .table-container {
     overflow-x: auto;
@@ -185,4 +225,253 @@ th {
 tr:hover {
     background: #f8fafc;
 }
+
+
+/* =========================================
+   REPARTITION DU SEXE
+========================================= */
+
+.percentage-box {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-top: 20px;
+}
+
+.percentage-box h2 {
+    margin: 0 0 25px 0;
+    font-size: 22px;
+    color: #222;
+}
+
+
+/* =========================================
+   CAROUSEL
+========================================= */
+
+.sexe-carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.sexe-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    overflow: hidden;
+    width: 100%;
+}
+
+
+/* =========================================
+   SEXE CARDS
+========================================= */
+
+.sexe-card {
+    width: 260px;
+    min-width: 260px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    transition: 0.3s ease;
+}
+
+.sexe-card:hover {
+    transform: translateY(-6px);
+}
+
+
+/* =========================================
+   PARTIE BLEUE
+========================================= */
+
+.sexe-card-top {
+    height: 150px;
+    background: #3f6fe5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =========================================
+   AVATAR
+========================================= */
+
+.sexe-avatar {
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    background: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 60px;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================
+   PARTIE BLANCHE
+========================================= */
+
+.sexe-card-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.sexe-card-body h3 {
+    margin: 0;
+    font-size: 22px;
+    color: #333;
+}
+
+.sexe-effectif {
+    font-size: 32px;
+    font-weight: bold;
+    color: #3f6fe5;
+    margin: 10px 0 0;
+}
+
+.sexe-personnes {
+    margin: 0;
+    color: #888;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   POURCENTAGE
+========================================= */
+
+.percentage {
+    margin-top: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
+
+/* =========================================
+   PROGRESS BAR
+========================================= */
+
+.progress {
+    width: 100%;
+    height: 9px;
+    background: #eeeeee;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: var(--progress);
+    background: #3f6fe5;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+
+/* =========================================
+   CAROUSEL BUTTONS
+========================================= */
+
+.carousel-btn {
+    width: 42px;
+    height: 42px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: white;
+    color: #3f6fe5;
+
+    font-size: 22px;
+    cursor: pointer;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.3s;
+}
+
+.carousel-btn:hover {
+    background: #3f6fe5;
+    color: white;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 800px) {
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .sexe-carousel {
+        gap: 10px;
+    }
+
+    .sexe-wrapper {
+        max-width: 280px;
+    }
+
+    .sexe-card {
+        width: 260px;
+        min-width: 260px;
+    }
+
+    .carousel-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .container {
+        width: 95%;
+        margin: 20px auto;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .percentage-box {
+        padding: 18px;
+    }
+
+    .percentage-box h2 {
+        font-size: 20px;
+    }
 }

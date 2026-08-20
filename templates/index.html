@@ -10,8 +10,8 @@
 
     <title>Analyse Questionnaire</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+       <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 
 </head>
 
@@ -21,11 +21,10 @@
 
     <div class="header">
 
-        <h1>📊 Analyse du questionnaire</h1>
+        <h1> Analyse du questionnaire</h1>
 
         <p>
-            Importez votre fichier Excel ou CSV
-            et créez vos graphiques.
+            Importez votre fichier Excel 
         </p>
 
     </div>
@@ -88,7 +87,7 @@
 
     <div class="card">
 
-        <h2>⚙️ Paramètres du graphique</h2>
+        <h2> Paramètres du graphique</h2>
 
         <form method="POST">
 
@@ -98,22 +97,24 @@
                 value="{{ filename }}"
             >
 
+
             <div class="form-grid">
 
-                <!-- X -->
+                <!-- ========================= -->
+                <!-- MULTIPLE X -->
+                <!-- ========================= -->
 
                 <div class="form-group">
 
                     <label>
-                        Variable X
+                        Axes X
                     </label>
 
-                    <select name="x_column"
-                            required>
-
-                        <option value="">
-                            -- Choisir X --
-                        </option>
+                    <select
+                        name="x_column"
+                        multiple
+                        required
+                        size="3">
 
                         {% for column in columns %}
 
@@ -127,23 +128,29 @@
 
                     </select>
 
+                    <small>
+                         Maintenez <b>Ctrl</b> pour sélectionner
+                        plusieurs variables X.
+                    </small>
+
                 </div>
 
 
-                <!-- Y -->
+                <!-- ========================= -->
+                <!-- MULTIPLE Y -->
+                <!-- ========================= -->
 
                 <div class="form-group">
 
                     <label>
-                        Variable Y
+                        Axes Y
                     </label>
 
-                    <select name="y_column"
-                            required>
-
-                        <option value="">
-                            -- Choisir Y --
-                        </option>
+                    <select
+                        name="y_column"
+                        multiple
+                        required
+                        size="3">
 
                         {% for column in columns %}
 
@@ -157,10 +164,17 @@
 
                     </select>
 
+                    <small>
+                         Maintenez <b>Ctrl</b> pour sélectionner
+                        plusieurs variables Y.
+                    </small>
+
                 </div>
 
 
+                <!-- ========================= -->
                 <!-- TYPE -->
+                <!-- ========================= -->
 
                 <div class="form-group">
 
@@ -182,9 +196,7 @@
                             📈 Courbe
                         </option>
 
-                        <option value="scatter">
-                            🔵 Nuage de points
-                        </option>
+                       
 
                     </select>
 
@@ -198,7 +210,7 @@
                 name="generate"
                 class="btn generate">
 
-                Générer le graphique
+                 Générer les graphiques
 
             </button>
 
@@ -208,133 +220,148 @@
 
     {% endif %}
 
+<!-- ========================= -->
+<!-- REPARTITION SEXE -->
+<!-- ========================= -->
+{% if sexe_stats %}
 
-    <!-- ========================= -->
-    <!-- STATISTIQUES -->
-    <!-- ========================= -->
+<div class="card percentage-box">
 
-    {% if stats %}
+    <h2>Répartition </h2>
 
-    <div class="stats">
+    <div class="sexe-carousel">
 
-        <div class="stat-card">
+        <button class="carousel-btn prev" onclick="moveSexe(-1)">
+            ❮
+        </button>
 
-            <span>👥</span>
+        <div class="sexe-wrapper">
 
-            <strong>
-                {{ stats.total }}
-            </strong>
+            {% for row in sexe_stats %}
 
-            <small>
-                Total réponses
-            </small>
+            <div class="sexe-card">
+
+                <!-- Partie bleue -->
+                <div class="sexe-card-top">
+
+                    <div class="sexe-avatar">
+
+                        {% if row["Sexe"]|lower|trim in ["garçon", "garcon", "homme"] %}
+                            👨
+                        {% elif row["Sexe"]|lower|trim in ["fille", "femme"] %}
+                            👩
+                        {% else %}
+                            👤
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- Partie blanche -->
+                <div class="sexe-card-body">
+
+                    <h3>
+                        {% if row["Sexe"]|lower|trim in ["garçon", "garcon", "homme"] %}
+                            Garçon
+                        {% elif row["Sexe"]|lower|trim in ["fille", "femme"] %}
+                            Fille
+                        {% else %}
+                            {{ row["Sexe"] }}
+                        {% endif %}
+                    </h3>
+
+                    <p class="sexe-effectif">
+                        {{ row["Effectif"] }}
+                    </p>
+
+                   
+
+                    <div class="percentage">
+                        {{ row["Pourcentage"] }}%
+                    </div>
+
+                    <div class="progress">
+                        <div
+                            class="progress-bar"
+                            style="--progress: {{ row['Pourcentage'] }}%;">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
 
         </div>
 
-
-        <div class="stat-card">
-
-            <span>✅</span>
-
-            <strong>
-                {{ stats.valid }}
-            </strong>
-
-            <small>
-                Réponses valides
-            </small>
-
-        </div>
-
-
-        <div class="stat-card">
-
-            <span>⚠️</span>
-
-            <strong>
-                {{ stats.missing_x }}
-            </strong>
-
-            <small>
-                Valeurs X manquantes
-            </small>
-
-        </div>
-
-
-        <div class="stat-card">
-
-            <span>⚠️</span>
-
-            <strong>
-                {{ stats.missing_y }}
-            </strong>
-
-            <small>
-                Valeurs Y manquantes
-            </small>
-
-        </div>
+        <button class="carousel-btn next" onclick="moveSexe(1)">
+            ❯
+        </button>
 
     </div>
 
-    {% endif %}
+</div>
+
+{% endif %}
 
 
-    <!-- ========================= -->
-    <!-- GRAPHIQUE -->
-    <!-- ========================= -->
+<!-- ========================= -->
+<!-- STATISTIQUES -->
+<!-- ========================= -->
 
-    {% if chart %}
-
-    <div class="card chart-card">
-
-        <h2>📈 Résultat</h2>
-
-        {{ chart | safe }}
-
-    </div>
-
-    {% endif %}
 {% if stats %}
 
 <div class="card statistics">
 
-    <h2>📈 Statistiques</h2>
-
-   
-
-
-    <h3>📋 Répartition</h3>
+    <h2> Statistiques</h2>
 
     <div class="table-container">
 
         <table>
 
             <thead>
+
                 <tr>
-                    <th>Catégorie</th>
-                    <th>Effectif</th>
-                    <th>Pourcentage</th>
+                    <th>Axes X</th>
+                    <th>Axes Y</th>
+                    <th>Total réponses</th>
+                    <th>Réponses valides</th>
+                    <th>Nombres des réponses Manquantes X</th>
+                    <th>Nombres des réponsesManquantes Y</th>
                 </tr>
+
             </thead>
 
             <tbody>
 
-                {% for row in stats.frequency %}
+                {% for stat in stats %}
 
                 <tr>
 
                     <td>
-                        {{ row[columns[0]] if false else row[request.form.get('x_column')] }}
+                        {{ stat.x_name }}
                     </td>
 
                     <td>
-                        {{ row["Effectif"] }}
+                        {{ stat.y_name }}
                     </td>
 
                     <td>
-                        {{ row["Pourcentage"] }} %
+                        {{ stat.total }}
+                    </td>
+
+                    <td>
+                        {{ stat.valid }}
+                    </td>
+
+                    <td>
+                        {{ stat.missing_x }}
+                    </td>
+
+                    <td>
+                        {{ stat.missing_y }}
                     </td>
 
                 </tr>
@@ -351,8 +378,132 @@
 
 {% endif %}
 
-</div>
 
+    <!-- ========================= -->
+    <!-- GRAPHIQUES -->
+    <!-- ========================= -->
+
+    {% if charts %}
+
+    <div class="card chart-card">
+
+        <h2>Résultats</h2>
+
+
+        {% for chart in charts %}
+
+        <div class="chart-result">
+
+            <h3>
+
+                {{ chart.y_name }}
+                selon
+                {{ chart.x_name }}
+
+            </h3>
+
+            <div class="chart">
+
+                {{ chart.html | safe }}
+
+            </div>
+
+        </div>
+
+
+        <hr>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ========================= -->
+    <!-- EXPORT EXCEL -->
+    <!-- ========================= -->
+
+    {% if charts %}
+
+    <div class="card">
+
+        <h2> Exporter l'analyse</h2>
+
+        <form method="POST"
+              action="/export-excel">
+
+            <input
+                type="hidden"
+                name="filename"
+                value="{{ filename }}"
+            >
+
+            {% for stat in stats %}
+
+                <input
+                    type="hidden"
+                    name="x_column"
+                    value="{{ stat.x_name }}"
+                >
+
+                <input
+                    type="hidden"
+                    name="y_column"
+                    value="{{ stat.y_name }}"
+                >
+
+            {% endfor %}
+
+
+            <button
+                type="submit"
+                class="btn">
+
+                📥 Exporter vers Excel
+
+            </button>
+
+        </form>
+
+    </div>
+
+    {% endif %}
+
+
+</div>
+<script>
+
+let sexePosition = 0;
+
+function moveSexe(direction) {
+
+    const wrapper = document.querySelector(".sexe-wrapper");
+    const cards = document.querySelectorAll(".sexe-card");
+
+    if (cards.length === 0) {
+        return;
+    }
+
+    sexePosition += direction;
+
+    if (sexePosition < 0) {
+        sexePosition = cards.length - 1;
+    }
+
+    if (sexePosition >= cards.length) {
+        sexePosition = 0;
+    }
+
+    const cardWidth = cards[0].offsetWidth + 25;
+
+    wrapper.scrollTo({
+        left: sexePosition * cardWidth,
+        behavior: "smooth"
+    });
+}
+
+</script>
 </body>
 
 </html>
