@@ -9,11 +9,8 @@ app = Flask(__name__)
 
 # Vercel allows temporary files in /tmp
 UPLOAD_FOLDER = "/tmp/uploads"
-
 ALLOWED_EXTENSIONS = {"xlsx", "csv"}
-
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
