@@ -9,8 +9,11 @@ app = Flask(__name__)
 
 # Vercel allows temporary files in /tmp
 UPLOAD_FOLDER = "/tmp/uploads"
+
 ALLOWED_EXTENSIONS = {"xlsx", "csv"}
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
@@ -50,12 +53,6 @@ def index():
     charts = []
     stats = []
     sexe_stats = []
-
-    x_response_stats = []
-    y_response_stats = []
-
-    x_name = ""
-    y_name = ""
 
     error = None
     filename = ""
@@ -142,15 +139,15 @@ def index():
                     return render_template(
                         "index.html",
                         columns=columns,
-                        charts=charts,
-                        stats=stats,
+                        charts=[],
+                        stats=[],
                         sexe_stats=sexe_stats,
-                        x_response_stats=x_response_stats,
-                        y_response_stats=y_response_stats,
-                        x_name=x_name,
-                        y_name=y_name,
-                        error=error,
-                        filename=filename
+                        filename=filename,
+                        error=None,
+                        x_response_stats = [],
+                        y_response_stats = [],
+                        x_name = "",
+                        y_name = ""
                     )
 
                 except Exception as e:
@@ -324,7 +321,7 @@ def index():
                                 "missing_x": missing_x,
                                 "missing_y": missing_y
                             })
-                            # ============================================
+                                                        # ============================================
                             # STATISTIQUES DES REPONSES
                             # ============================================
 
@@ -519,9 +516,9 @@ def index():
 
                     error = f"Erreur : {str(e)}"
 
-    # =====================================================
-    # AFFICHAGE
-    # =====================================================
+                # =====================================================
+                # AFFICHAGE
+                # =====================================================
 
     return render_template(
         "index.html",
