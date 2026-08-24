@@ -53,7 +53,8 @@ def index():
     charts = []
     stats = []
     sexe_stats = []
-
+    x_response_stats = []
+    y_response_stats = []
     error = None
     filename = ""
 
