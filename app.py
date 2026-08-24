@@ -53,8 +53,13 @@ def index():
     charts = []
     stats = []
     sexe_stats = []
+
     x_response_stats = []
     y_response_stats = []
+
+    x_name = ""
+    y_name = ""
+
     error = None
     filename = ""
 
@@ -326,36 +331,64 @@ def index():
                             # STATISTIQUES DES REPONSES
                             # ============================================
 
-                            x_response_stats = (
+                          # ============================================
+                        # STATISTIQUES DES REPONSES X
+                        # ============================================
+
+                            x_response_df = (
                                 df[x_column]
                                 .fillna("Manquante")
                                 .value_counts()
                                 .reset_index()
                             )
 
-                            x_response_stats.columns = ["Reponse", "Effectif"]
+                            x_response_df.columns = [
+                                "Reponse",
+                                "Effectif"
+                            ]
 
-                            x_total = x_response_stats["Effectif"].sum()
+                            x_total = x_response_df["Effectif"].sum()
 
-                            x_response_stats["Pourcentage"] = (
-                                x_response_stats["Effectif"] / x_total * 100
-                            ).round(2)
+                            if x_total > 0:
+                                x_response_df["Pourcentage"] = (
+                                    x_response_df["Effectif"]
+                                    / x_total
+                                    * 100
+                                ).round(2)
+                            else:
+                                x_response_df["Pourcentage"] = 0
+
+                            x_response_stats = x_response_df.to_dict("records")
 
 
-                            y_response_stats = (
+                            # ============================================
+                            # STATISTIQUES DES REPONSES Y
+                            # ============================================
+
+                            y_response_df = (
                                 df[y_column]
                                 .fillna("Manquante")
                                 .value_counts()
                                 .reset_index()
                             )
 
-                            y_response_stats.columns = ["Reponse", "Effectif"]
+                            y_response_df.columns = [
+                                "Reponse",
+                                "Effectif"
+                            ]
 
-                            y_total = y_response_stats["Effectif"].sum()
+                            y_total = y_response_df["Effectif"].sum()
 
-                            y_response_stats["Pourcentage"] = (
-                                y_response_stats["Effectif"] / y_total * 100
-                            ).round(2)
+                            if y_total > 0:
+                                y_response_df["Pourcentage"] = (
+                                    y_response_df["Effectif"]
+                                    / y_total
+                                    * 100
+                                ).round(2)
+                            else:
+                                y_response_df["Pourcentage"] = 0
+
+                            y_response_stats = y_response_df.to_dict("records")
                             # =================================
                             # GRAPHIQUE BAR
                             # =================================
@@ -529,8 +562,10 @@ def index():
         sexe_stats=sexe_stats,
         error=error,
         filename=filename,
-        x_response_stats=x_response_stats.to_dict("records"),
-        y_response_stats=y_response_stats.to_dict("records")
+        x_response_stats=x_response_stats,
+        y_response_stats=y_response_stats,
+        x_name=x_name,
+        y_name=y_name
     )
 
 
