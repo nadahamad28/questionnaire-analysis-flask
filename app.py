@@ -54,6 +54,12 @@ def index():
     stats = []
     sexe_stats = []
 
+    x_response_stats = []
+    y_response_stats = []
+
+    x_name = ""
+    y_name = ""
+
     error = None
     filename = ""
 
@@ -139,11 +145,15 @@ def index():
                     return render_template(
                         "index.html",
                         columns=columns,
-                        charts=[],
-                        stats=[],
+                        charts=charts,
+                        stats=stats,
                         sexe_stats=sexe_stats,
-                        filename=filename,
-                        error=None
+                        x_response_stats=x_response_stats,
+                        y_response_stats=y_response_stats,
+                        x_name=x_name,
+                        y_name=y_name,
+                        error=error,
+                        filename=filename
                     )
 
                 except Exception as e:
@@ -317,7 +327,7 @@ def index():
                                 "missing_x": missing_x,
                                 "missing_y": missing_y
                             })
-                                                        # ============================================
+                            # ============================================
                             # STATISTIQUES DES REPONSES
                             # ============================================
 
