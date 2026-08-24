@@ -317,7 +317,40 @@ def index():
                                 "missing_x": missing_x,
                                 "missing_y": missing_y
                             })
+                                                        # ============================================
+                            # STATISTIQUES DES REPONSES
+                            # ============================================
 
+                            x_response_stats = (
+                                df[x_column]
+                                .fillna("Manquante")
+                                .value_counts()
+                                .reset_index()
+                            )
+
+                            x_response_stats.columns = ["Reponse", "Effectif"]
+
+                            x_total = x_response_stats["Effectif"].sum()
+
+                            x_response_stats["Pourcentage"] = (
+                                x_response_stats["Effectif"] / x_total * 100
+                            ).round(2)
+
+
+                            y_response_stats = (
+                                df[y_column]
+                                .fillna("Manquante")
+                                .value_counts()
+                                .reset_index()
+                            )
+
+                            y_response_stats.columns = ["Reponse", "Effectif"]
+
+                            y_total = y_response_stats["Effectif"].sum()
+
+                            y_response_stats["Pourcentage"] = (
+                                y_response_stats["Effectif"] / y_total * 100
+                            ).round(2)
                             # =================================
                             # GRAPHIQUE BAR
                             # =================================
@@ -490,7 +523,9 @@ def index():
         stats=stats,
         sexe_stats=sexe_stats,
         error=error,
-        filename=filename
+        filename=filename,
+        x_response_stats=x_response_stats.to_dict("records"),
+        y_response_stats=y_response_stats.to_dict("records")
     )
 
 

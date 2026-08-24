@@ -377,7 +377,55 @@
 </div>
 
 {% endif %}
+<!-- ========================= -->
+<!-- DETAIL DES REPONSES X -->
+<!-- ========================= -->
 
+{% if x_response_stats %}
+
+<div class="card statistics">
+
+    <h2> Statistiques des Réponses - {{ x_name }}</h2>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Réponse</th>
+                    <th>Effectif</th>
+                    <th>Pourcentage</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for row in x_response_stats %}
+
+                <tr>
+                    <td>{{ row["Reponse"] }}</td>
+
+                    <td>
+                        {{ row["Effectif"] }}
+                    </td>
+
+                    <td>
+                        {{ row["Pourcentage"] }} %
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+            
+        </table>
+
+    </div>
+
+</div>
+
+{% endif %}
 
     <!-- ========================= -->
     <!-- GRAPHIQUES -->
