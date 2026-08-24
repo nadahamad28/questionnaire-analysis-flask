@@ -381,11 +381,14 @@
 <!-- DETAIL DES REPONSES X -->
 <!-- ========================= -->
 
-{% if x_response_stats %}
+{% if x_response_stats is defined and x_response_stats %}
 
 <div class="card statistics">
 
-    <h2> Statistiques des Réponses - {{ x_name }}</h2>
+    <h2>
+        Statistiques des réponses -
+        {{ x_name }}
+    </h2>
 
     <div class="table-container">
 
@@ -404,7 +407,10 @@
                 {% for row in x_response_stats %}
 
                 <tr>
-                    <td>{{ row["Reponse"] }}</td>
+
+                    <td>
+                        {{ row["Reponse"] }}
+                    </td>
 
                     <td>
                         {{ row["Effectif"] }}
@@ -413,12 +419,13 @@
                     <td>
                         {{ row["Pourcentage"] }} %
                     </td>
+
                 </tr>
 
                 {% endfor %}
 
             </tbody>
-            
+
         </table>
 
     </div>
